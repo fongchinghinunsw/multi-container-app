@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t stephenfong/react-test -f ./react-server/Dockerfile.dev ./react-server
+
+scripts:
+  - docker run -e CI=true stephenfong/react-test npm test
+
+after_success:
+  - docker build -t stephenfong/react-server ./react-server
+  - docker build -t stephenfong/express-server ./express-server
+  - docker build -t stephenfong/nginx ./nginx
+  - docker build -t stephenfong/worker ./worker
+  # login to the CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # take those images and push them to docker hub
+  - docker push stephenfong/react-server
+  - docker push stephenfong/express-server
+  - docker push stephenfong/nginx
+  - docker push stephenfong/worker
